@@ -688,6 +688,21 @@
 
     // === Init ===
     document.getElementById('input-date').value = new Date().toISOString().split('T')[0];
+
+    // Auto-seed from bundled JSON on first visit
+    if (!state.expenses.length) {
+      fetch('./june-expenses.json')
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (data && data.length) {
+            state.expenses = data;
+            save();
+            renderAll();
+          }
+        })
+        .catch(() => {});
+    }
+
     renderAll();
   </script>
 </body>
