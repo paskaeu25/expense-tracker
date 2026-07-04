@@ -160,6 +160,7 @@
       <button class="tab" data-tab="add">Add</button>
       <button class="tab" data-tab="list">Expenses</button>
       <button class="tab" data-tab="categories">Categories</button>
+      <button class="tab" data-tab="import">Import</button>
     </div>
 
     <!-- DASHBOARD -->
@@ -241,6 +242,25 @@
             <button class="btn" id="btn-add-cat">Add</button>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- IMPORT -->
+    <div id="view-import" class="hidden">
+      <div class="card">
+        <h2>Import Data</h2>
+        <p style="color:#8e8e93;font-size:0.9rem;margin-bottom:1rem;">Upload a JSON file exported from this app or generated from the CSV converter.</p>
+        <div class="form-group">
+          <label>JSON file</label>
+          <input type="file" id="import-file" accept=".json">
+        </div>
+        <button class="btn btn-success" id="btn-import">Import</button>
+        <div id="import-result" class="mt-1"></div>
+      </div>
+      <div class="card">
+        <h2>Clear All Data</h2>
+        <p style="color:#8e8e93;font-size:0.9rem;margin-bottom:1rem;">Remove all expenses and reset to default categories.</p>
+        <button class="btn btn-danger" id="btn-clear">Clear All Data</button>
       </div>
     </div>
 
@@ -616,6 +636,40 @@
       renderAll();
     });
 
+    // === Import ===
+    function handleImport() {
+      const fileInput = document.getElementById('import-file');
+      const file = fileInput.files[0];
+      const result = document.getElementById('import-result');
+      if (!file) { result.innerHTML = '<div class="empty">Select a JSON file first</div>'; return; }
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (!Array.isArray(data)) throw new Error('JSON must be an array of expenses');
+          const valid = data.filter(e => e.amount && e.date && e.category);
+          if (!valid.length) throw new Error('No valid expense entries found');
+          const count = valid.length;
+          state.expenses = state.expenses.concat(valid);
+          save(); renderAll();
+          result.innerHTML = `<div style="color:#34c759;font-weight:500;">Imported ${count} expenses successfully</div>`;
+          fileInput.value = '';
+        } catch (err) {
+          result.innerHTML = `<div style="color:#ff3b30;">Error: ${err.message}</div>`;
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function clearAll() {
+      if (!confirm('Delete all expenses and reset categories? This cannot be undone.')) return;
+      if (!confirm('Are you sure?')) return;
+      state.expenses = [];
+      state.categories = [...DEFAULT_CATEGORIES.map(c => ({...c}))];
+      save(); renderAll();
+      document.getElementById('import-result').innerHTML = '<div style="color:#34c759;font-weight:500;">All data cleared</div>';
+    }
+
     // === Events ===
     document.querySelectorAll('.tab').forEach(t => {
       t.addEventListener('click', () => switchTab(t.dataset.tab));
@@ -623,6 +677,8 @@
     document.getElementById('expense-form').addEventListener('submit', addExpense);
     document.getElementById('btn-add-cat').addEventListener('click', addCategory);
     document.getElementById('btn-export').addEventListener('click', exportCSV);
+    document.getElementById('btn-import').addEventListener('click', handleImport);
+    document.getElementById('btn-clear').addEventListener('click', clearAll);
     document.getElementById('close-receipt').addEventListener('click', () => {
       document.getElementById('receipt-modal').classList.add('hidden');
     });
