@@ -93,6 +93,11 @@
     .expense-amount { font-weight: 600; white-space: nowrap; }
     .expense-date { font-size: 0.8rem; color: #8e8e93; white-space: nowrap; }
     .expense-actions { display: flex; gap: 0.4rem; flex-shrink: 0; }
+    .month-head {
+      font-weight: 600; font-size: 0.95rem;
+      padding: 1rem 0 0.4rem; color: #555;
+    }
+    .month-head:first-of-type { padding-top: 0; }
 
     /* Summary cards */
     .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-bottom: 1.5rem; }
@@ -416,45 +421,6 @@
       });
     }
 
-    function renderExpenses(expenses) {
-      const el = document.getElementById('expense-list');
-      if (!expenses.length) { el.innerHTML = '<div class="empty">No expenses yet</div>'; return; }
-      el.innerHTML = expenses.map(e => {
-        const cat = getCategory(e.category);
-        const receipts = e.receipts || [];
-        return `
-          <div class="expense-item">
-            <div class="expense-left">
-              <span class="expense-cat" style="background:${cat.color}"></span>
-              <div class="expense-detail">
-                <div class="expense-name">${cat.name}</div>
-                ${e.note ? `<div class="expense-note">${e.note}</div>` : ''}
-                ${receipts.length ? `<div class="receipts">${receipts.map(r => `<img class="receipt-thumb" src="${r}" data-src="${r}">`).join('')}</div>` : ''}
-              </div>
-            </div>
-            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.3rem;flex-shrink:0;">
-              <div class="expense-amount">${formatMoney(e.amount)}</div>
-              <div class="expense-date">${formatDate(e.date)}</div>
-              <div class="expense-actions">
-                <button class="btn btn-sm btn-outline" data-edit-id="${e.id}">✎</button>
-                <button class="btn btn-sm btn-danger" data-del-id="${e.id}">✕</button>
-              </div>
-            </div>
-          </div>
-        `;
-      }).join('');
-
-      document.querySelectorAll('[data-del-id]').forEach(b => {
-        b.addEventListener('click', () => deleteExpense(b.dataset.delId));
-      });
-      document.querySelectorAll('[data-edit-id]').forEach(b => {
-        b.addEventListener('click', () => startEdit(b.dataset.editId));
-      });
-      document.querySelectorAll('.receipt-thumb').forEach(img => {
-        img.addEventListener('click', () => openReceipt(img.dataset.src));
-      });
-    }
-
     function renderRecent() {
       const sorted = [...state.expenses].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
       const el = document.getElementById('recent-expenses');
@@ -485,8 +451,59 @@
     }
 
     function renderAllExpenses() {
+      const el = document.getElementById('expense-list');
       const sorted = [...state.expenses].sort((a, b) => b.date.localeCompare(a.date));
-      renderExpenses(sorted);
+      if (!sorted.length) { el.innerHTML = '<div class="empty">No expenses yet</div>'; return; }
+
+      // Group by month
+      const groups = {};
+      sorted.forEach(e => {
+        const m = e.date.slice(0, 7);
+        if (!groups[m]) groups[m] = [];
+        groups[m].push(e);
+      });
+
+      const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      let html = '';
+      Object.keys(groups).forEach(m => {
+        const [y, mon] = m.split('-');
+        const label = `${monthNames[parseInt(mon)-1]} ${y}`;
+        html += `<div class="month-head">${label}</div>`;
+        groups[m].forEach(e => {
+          const cat = getCategory(e.category);
+          const receipts = e.receipts || [];
+          html += `
+            <div class="expense-item">
+              <div class="expense-left">
+                <span class="expense-cat" style="background:${cat.color}"></span>
+                <div class="expense-detail">
+                  <div class="expense-name">${cat.name}</div>
+                  ${e.note ? `<div class="expense-note">${e.note}</div>` : ''}
+                  ${receipts.length ? `<div class="receipts">${receipts.map(r => `<img class="receipt-thumb" src="${r}" data-src="${r}">`).join('')}</div>` : ''}
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.3rem;flex-shrink:0;">
+                <div class="expense-amount">${formatMoney(e.amount)}</div>
+                <div class="expense-date">${formatDate(e.date)}</div>
+                <div class="expense-actions">
+                  <button class="btn btn-sm btn-outline" data-edit-id="${e.id}">✎</button>
+                  <button class="btn btn-sm btn-danger" data-del-id="${e.id}">✕</button>
+                </div>
+              </div>
+            </div>`;
+        });
+      });
+      el.innerHTML = html;
+
+      document.querySelectorAll('[data-del-id]').forEach(b => {
+        b.addEventListener('click', () => deleteExpense(b.dataset.delId));
+      });
+      document.querySelectorAll('[data-edit-id]').forEach(b => {
+        b.addEventListener('click', () => startEdit(b.dataset.editId));
+      });
+      document.querySelectorAll('.receipt-thumb').forEach(img => {
+        img.addEventListener('click', () => openReceipt(img.dataset.src));
+      });
     }
 
     function renderMonthLabel() {
