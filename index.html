@@ -66,19 +66,33 @@
 
     /* Expense list */
     .expense-item {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 0.8rem 0; border-bottom: 1px solid #f0f0f0;
+      display: flex; justify-content: space-between; align-items: flex-start;
+      padding: 0.8rem 0; border-bottom: 1px solid #f0f0f0; gap: 0.5rem;
     }
     .expense-item:last-child { border-bottom: none; }
-    .expense-left { display: flex; align-items: center; gap: 0.75rem; }
-    .expense-cat {
-      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    .expense-left {
+      display: flex; align-items: flex-start; gap: 0.75rem;
+      flex: 1; min-width: 0;
     }
-    .expense-detail .expense-note { font-size: 0.8rem; color: #8e8e93; margin-top: 0.1rem; }
-    .expense-right { text-align: right; }
-    .expense-amount { font-weight: 600; }
-    .expense-date { font-size: 0.8rem; color: #8e8e93; }
-    .expense-actions { display: flex; gap: 0.4rem; margin-left: 0.5rem; }
+    .expense-cat {
+      width: 10px; height: 10px; border-radius: 50%;
+      flex-shrink: 0; margin-top: 0.3rem;
+    }
+    .expense-detail { min-width: 0; }
+    .expense-detail .expense-name {
+      font-weight: 500; font-size: 0.95rem;
+      word-wrap: break-word; overflow-wrap: break-word;
+    }
+    .expense-detail .expense-note {
+      font-size: 0.8rem; color: #8e8e93; margin-top: 0.1rem;
+      word-wrap: break-word; overflow-wrap: break-word;
+    }
+    .expense-right {
+      text-align: right; flex-shrink: 0;
+    }
+    .expense-amount { font-weight: 600; white-space: nowrap; }
+    .expense-date { font-size: 0.8rem; color: #8e8e93; white-space: nowrap; }
+    .expense-actions { display: flex; gap: 0.4rem; flex-shrink: 0; }
 
     /* Summary cards */
     .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-bottom: 1.5rem; }
@@ -255,7 +269,10 @@
             <input type="file" id="input-receipts" accept="image/*" multiple>
             <div class="receipts" id="receipt-previews"></div>
           </div>
-          <button type="submit" class="btn">Add Expense</button>
+          <div style="display:flex;gap:0.5rem;">
+            <button type="submit" class="btn" id="btn-submit-expense">Add Expense</button>
+            <button type="button" class="btn btn-outline hidden" id="btn-cancel-edit">Cancel</button>
+          </div>
         </form>
       </div>
     </div>
@@ -337,6 +354,8 @@
       { name: 'Other', color: '#8e8e93' },
     ];
 
+    let editingId = null;
+
     let state = {
       expenses: [],
       categories: [...DEFAULT_CATEGORIES],
@@ -408,17 +427,18 @@
             <div class="expense-left">
               <span class="expense-cat" style="background:${cat.color}"></span>
               <div class="expense-detail">
-                <strong>${cat.name}</strong>
+                <div class="expense-name">${cat.name}</div>
                 ${e.note ? `<div class="expense-note">${e.note}</div>` : ''}
                 ${receipts.length ? `<div class="receipts">${receipts.map(r => `<img class="receipt-thumb" src="${r}" data-src="${r}">`).join('')}</div>` : ''}
               </div>
             </div>
-            <div class="expense-right">
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.3rem;flex-shrink:0;">
               <div class="expense-amount">${formatMoney(e.amount)}</div>
               <div class="expense-date">${formatDate(e.date)}</div>
-            </div>
-            <div class="expense-actions">
-              <button class="btn btn-sm btn-danger" data-del-id="${e.id}">X</button>
+              <div class="expense-actions">
+                <button class="btn btn-sm btn-outline" data-edit-id="${e.id}">✎</button>
+                <button class="btn btn-sm btn-danger" data-del-id="${e.id}">✕</button>
+              </div>
             </div>
           </div>
         `;
@@ -426,6 +446,9 @@
 
       document.querySelectorAll('[data-del-id]').forEach(b => {
         b.addEventListener('click', () => deleteExpense(b.dataset.delId));
+      });
+      document.querySelectorAll('[data-edit-id]').forEach(b => {
+        b.addEventListener('click', () => startEdit(b.dataset.editId));
       });
       document.querySelectorAll('.receipt-thumb').forEach(img => {
         img.addEventListener('click', () => openReceipt(img.dataset.src));
@@ -448,7 +471,7 @@
             <div class="expense-left">
               <span class="expense-cat" style="background:${cat.color}"></span>
               <div class="expense-detail">
-                <strong>${cat.name}</strong>
+                <div class="expense-name">${cat.name}</div>
                 ${e.note ? `<div class="expense-note">${e.note}</div>` : ''}
               </div>
             </div>
@@ -567,6 +590,30 @@
     }
 
     // === Actions ===
+    function startEdit(id) {
+      const expense = state.expenses.find(e => e.id === id);
+      if (!expense) return;
+      editingId = id;
+      document.getElementById('input-amount').value = expense.amount;
+      document.getElementById('input-date').value = expense.date;
+      document.getElementById('input-category').value = expense.category;
+      document.getElementById('input-note').value = expense.note || '';
+      document.getElementById('btn-submit-expense').textContent = 'Update Expense';
+      document.getElementById('btn-cancel-edit').classList.remove('hidden');
+      document.getElementById('input-amount').focus();
+      switchTab('add');
+    }
+
+    function cancelEdit() {
+      editingId = null;
+      document.getElementById('expense-form').reset();
+      document.getElementById('receipt-previews').innerHTML = '';
+      document.getElementById('input-date').value = new Date().toISOString().split('T')[0];
+      document.getElementById('btn-submit-expense').textContent = 'Add Expense';
+      document.getElementById('btn-cancel-edit').classList.add('hidden');
+      switchTab('list');
+    }
+
     function addExpense(e) {
       e.preventDefault();
       const amount = parseFloat(document.getElementById('input-amount').value);
@@ -586,22 +633,32 @@
         }
       }
 
-      const expense = {
-        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-        amount,
-        date,
-        category,
-        note,
-        receipts,
-      };
+      if (editingId) {
+        const idx = state.expenses.findIndex(e => e.id === editingId);
+        if (idx !== -1) {
+          state.expenses[idx] = { ...state.expenses[idx], amount, date, category, note, receipts };
+        }
+        editingId = null;
+        document.getElementById('btn-submit-expense').textContent = 'Add Expense';
+        document.getElementById('btn-cancel-edit').classList.add('hidden');
+      } else {
+        const expense = {
+          id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+          amount,
+          date,
+          category,
+          note,
+          receipts,
+        };
+        state.expenses.push(expense);
+      }
 
-      state.expenses.push(expense);
       save();
       renderAll();
       document.getElementById('expense-form').reset();
       document.getElementById('receipt-previews').innerHTML = '';
       document.getElementById('input-date').value = new Date().toISOString().split('T')[0];
-      switchTab('dashboard');
+      switchTab('list');
     }
 
     function deleteExpense(id) {
@@ -743,7 +800,16 @@
       a.href = url; a.download = 'expense-tracker-data.json'; a.click();
       URL.revokeObjectURL(url);
     });
+    document.getElementById('btn-cancel-edit').addEventListener('click', cancelEdit);
     document.getElementById('btn-fab').addEventListener('click', () => {
+      if (editingId) cancelEdit();
+      document.getElementById('expense-form').reset();
+      document.getElementById('receipt-previews').innerHTML = '';
+      document.getElementById('input-date').value = new Date().toISOString().split('T')[0];
+      document.getElementById('file-label').textContent = 'No files chosen';
+      editingId = null;
+      document.getElementById('btn-submit-expense').textContent = 'Add Expense';
+      document.getElementById('btn-cancel-edit').classList.add('hidden');
       switchTab('add');
       document.getElementById('input-amount').focus();
     });
