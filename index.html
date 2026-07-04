@@ -145,10 +145,20 @@
     .month-nav span { font-weight: 600; font-size: 1rem; }
 
     /* Mobile */
-    @media (max-width: 600px) {
-      .summary-grid { grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
-      .summary-card .value { font-size: 1.1rem; }
+    @media (max-width: 640px) {
+      .container { padding: 0.75rem; }
+      .tabs { gap: 0.25rem; padding: 0.4rem; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .tab { font-size: 0.75rem; padding: 0.5rem 0.4rem; white-space: nowrap; flex: 0 0 auto; }
+      .summary-grid { grid-template-columns: repeat(3, 1fr); gap: 0.4rem; }
+      .summary-card { padding: 0.7rem; }
+      .summary-card .value { font-size: 1rem; }
+      .card { padding: 1rem; }
       .form-row { flex-direction: column; gap: 0; }
+      .hero-content h1 { font-size: 2rem; }
+      .gallery { grid-template-columns: 1fr; }
+      .month-nav span { font-size: 0.9rem; }
+      .expense-item { flex-wrap: wrap; gap: 0.3rem; }
+      .expense-actions { width: 100%; justify-content: flex-end; }
     }
   </style>
 </head>
@@ -248,8 +258,13 @@
     <!-- IMPORT -->
     <div id="view-import" class="hidden">
       <div class="card">
+        <h2>Export Data</h2>
+        <p style="color:#8e8e93;font-size:0.9rem;margin-bottom:1rem;">Download your current data as JSON to transfer to another device.</p>
+        <button class="btn" id="btn-export-data">Download JSON</button>
+      </div>
+      <div class="card">
         <h2>Import Data</h2>
-        <p style="color:#8e8e93;font-size:0.9rem;margin-bottom:1rem;">Upload a JSON file exported from this app or generated from the CSV converter.</p>
+        <p style="color:#8e8e93;font-size:0.9rem;margin-bottom:1rem;">Upload a JSON file from another device.</p>
         <div class="form-group">
           <label>JSON file</label>
           <input type="file" id="import-file" accept=".json">
@@ -679,6 +694,14 @@
     document.getElementById('btn-export').addEventListener('click', exportCSV);
     document.getElementById('btn-import').addEventListener('click', handleImport);
     document.getElementById('btn-clear').addEventListener('click', clearAll);
+    document.getElementById('btn-export-data').addEventListener('click', () => {
+      if (!state.expenses.length) return alert('No data to export');
+      const blob = new Blob([JSON.stringify(state.expenses, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'expense-tracker-data.json'; a.click();
+      URL.revokeObjectURL(url);
+    });
     document.getElementById('close-receipt').addEventListener('click', () => {
       document.getElementById('receipt-modal').classList.add('hidden');
     });
