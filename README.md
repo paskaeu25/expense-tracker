@@ -15,7 +15,7 @@ A minimal expense tracking web app with local storage, category management, and 
 
 ## Usage
 
-Open `index.html` in a browser or visit the live deployment. All data stays in your browser — no server, no database.
+Open `index.html` in a browser or visit the [live deployment](https://app-ten-sage-zu9xxqf68o.vercel.app/). All data stays in your browser — no server, no database.
 
 ### Sync between devices
 
