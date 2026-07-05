@@ -170,6 +170,7 @@
       padding: 0.55rem 1.2rem; border: 1.5px solid #e5e5e5;
       border-radius: 10px; font-size: 0.85rem; font-weight: 500;
       cursor: pointer; transition: all 0.2s; background: #fff; color: #555;
+      display: inline-block; margin: 0;
     }
     .file-input-btn:hover { border-color: #1d1d1f; color: #1d1d1f; }
     .file-input-label { font-size: 0.85rem; color: #8e8e93; }
@@ -270,8 +271,8 @@
             <div class="file-input-wrap">
               <label class="file-input-btn" for="input-receipts">Choose images</label>
               <span class="file-input-label" id="file-label">No files chosen</span>
+              <input type="file" id="input-receipts" accept="image/*" multiple>
             </div>
-            <input type="file" id="input-receipts" accept="image/*" multiple>
             <div class="receipts" id="receipt-previews"></div>
           </div>
           <div style="display:flex;gap:0.5rem;">
@@ -324,7 +325,11 @@
         <p style="color:#8e8e93;font-size:0.9rem;margin-bottom:1rem;">Upload a JSON file from another device.</p>
         <div class="form-group">
           <label>JSON file</label>
-          <input type="file" id="import-file" accept=".json">
+          <div style="display:flex;align-items:center;gap:0.75rem;">
+            <label for="import-file" class="btn btn-outline btn-sm" style="display:inline-block;margin:0;cursor:pointer;">Choose file</label>
+            <span style="font-size:0.85rem;color:#8e8e93;" id="import-file-label">No file chosen</span>
+          </div>
+          <input type="file" id="import-file" accept=".json" style="display:none;">
         </div>
         <button class="btn btn-success" id="btn-import">Import</button>
         <div id="import-result" class="mt-1"></div>
@@ -741,6 +746,10 @@
     }
 
     // === Receipt preview ===
+    document.getElementById('import-file').addEventListener('change', function() {
+      document.getElementById('import-file-label').textContent = this.files[0] ? this.files[0].name : 'No file chosen';
+    });
+
     document.getElementById('input-receipts').addEventListener('change', function() {
       const container = document.getElementById('receipt-previews');
       const label = document.getElementById('file-label');
