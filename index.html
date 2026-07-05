@@ -175,6 +175,23 @@
     .file-input-btn:hover { border-color: #1d1d1f; color: #1d1d1f; }
     .file-input-label { font-size: 0.85rem; color: #8e8e93; }
 
+    /* Filter bar */
+    .filter-bar {
+      display: flex; gap: 0.5rem; align-items: center;
+      padding: 0.75rem 0; flex-wrap: wrap;
+    }
+    .filter-input {
+      padding: 0.45rem 0.7rem; border: 1.5px solid #e5e5e5;
+      border-radius: 10px; font-size: 0.85rem; font-family: inherit;
+      outline: none; transition: border 0.2s; background: #fff;
+      min-width: 0;
+    }
+    .filter-input:focus { border-color: #1d1d1f; }
+    .filter-input[type="text"] { flex: 1; min-width: 140px; }
+    .filter-input[type="date"] { width: 130px; }
+    .filter-bar select { flex: 0 0 auto; min-width: 120px; }
+    .filter-sep { color: #8e8e93; font-size: 0.9rem; }
+
     @media (max-width: 640px) {
       .fab { bottom: 1rem; right: 1rem; width: 50px; height: 50px; font-size: 1.5rem; }
     }
@@ -210,6 +227,11 @@
       .month-nav span { font-size: 0.9rem; }
       .expense-item { flex-wrap: wrap; gap: 0.3rem; }
       .expense-actions { width: 100%; justify-content: flex-end; }
+      .filter-bar { flex-direction: column; align-items: stretch; }
+      .filter-input[type="text"] { min-width: 0; }
+      .filter-input[type="date"] { width: 100%; }
+      .filter-bar select { min-width: 0; }
+      .filter-sep { display: none; }
     }
   </style>
 </head>
@@ -289,6 +311,16 @@
         <div class="month-nav">
           <span style="font-weight: 600; font-size: 1rem;">All Expenses</span>
           <button class="btn btn-sm btn-outline" id="btn-export">Export CSV</button>
+        </div>
+        <div class="filter-bar" id="filter-bar">
+          <input type="text" class="filter-input" id="filter-search" placeholder="Search notes..." autocomplete="off">
+          <select class="filter-input" id="filter-category">
+            <option value="">All categories</option>
+          </select>
+          <input type="date" class="filter-input filter-date" id="filter-date-from" title="From date">
+          <span class="filter-sep">—</span>
+          <input type="date" class="filter-input filter-date" id="filter-date-to" title="To date">
+          <button class="btn btn-sm btn-outline" id="filter-clear" style="flex-shrink:0;">Clear</button>
         </div>
         <div id="expense-list"></div>
       </div>
@@ -457,8 +489,35 @@
 
     function renderAllExpenses() {
       const el = document.getElementById('expense-list');
-      const sorted = [...state.expenses].sort((a, b) => b.date.localeCompare(a.date));
-      if (!sorted.length) { el.innerHTML = '<div class="empty">No expenses yet</div>'; return; }
+
+      // Read filters
+      const searchTerm = (document.getElementById('filter-search').value || '').toLowerCase().trim();
+      const catFilter = document.getElementById('filter-category').value;
+      const dateFrom = document.getElementById('filter-date-from').value;
+      const dateTo = document.getElementById('filter-date-to').value;
+
+      // Apply filters
+      let filtered = [...state.expenses];
+      if (searchTerm) {
+        filtered = filtered.filter(e => (e.note || '').toLowerCase().includes(searchTerm));
+      }
+      if (catFilter) {
+        filtered = filtered.filter(e => e.category === catFilter);
+      }
+      if (dateFrom) {
+        filtered = filtered.filter(e => e.date >= dateFrom);
+      }
+      if (dateTo) {
+        filtered = filtered.filter(e => e.date <= dateTo);
+      }
+
+      const sorted = [...filtered].sort((a, b) => b.date.localeCompare(a.date));
+      if (!sorted.length) {
+        el.innerHTML = state.expenses.length
+          ? '<div class="empty">No expenses match your filters</div>'
+          : '<div class="empty">No expenses yet</div>';
+        return;
+      }
 
       // Group by month
       const groups = {};
@@ -602,10 +661,19 @@
       sel.innerHTML = state.categories.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
     }
 
+    function renderCategoryFilter() {
+      const sel = document.getElementById('filter-category');
+      const currentVal = sel.value;
+      sel.innerHTML = '<option value="">All categories</option>' +
+        state.categories.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+      sel.value = currentVal;
+    }
+
     function renderAll() {
       renderMonthLabel();
       renderSummary();
       renderRecent();
+      renderCategoryFilter();
       renderAllExpenses();
       renderCategories();
       renderCategorySelect();
@@ -809,6 +877,14 @@
       document.getElementById('import-result').innerHTML = '<div style="color:#34c759;font-weight:500;">All data cleared</div>';
     }
 
+    function clearFilters() {
+      document.getElementById('filter-search').value = '';
+      document.getElementById('filter-category').value = '';
+      document.getElementById('filter-date-from').value = '';
+      document.getElementById('filter-date-to').value = '';
+      renderAllExpenses();
+    }
+
     // === Events ===
     document.querySelectorAll('.tab').forEach(t => {
       t.addEventListener('click', () => switchTab(t.dataset.tab));
@@ -818,6 +894,11 @@
     document.getElementById('btn-export').addEventListener('click', exportCSV);
     document.getElementById('btn-import').addEventListener('click', handleImport);
     document.getElementById('btn-clear').addEventListener('click', clearAll);
+    document.getElementById('filter-search').addEventListener('input', renderAllExpenses);
+    document.getElementById('filter-category').addEventListener('change', renderAllExpenses);
+    document.getElementById('filter-date-from').addEventListener('change', renderAllExpenses);
+    document.getElementById('filter-date-to').addEventListener('change', renderAllExpenses);
+    document.getElementById('filter-clear').addEventListener('click', clearFilters);
     document.getElementById('btn-export-data').addEventListener('click', () => {
       if (!state.expenses.length) return alert('No data to export');
       const blob = new Blob([JSON.stringify(state.expenses, null, 2)], { type: 'application/json' });
