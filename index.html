@@ -63,6 +63,7 @@
     .btn-danger:hover { background: #d62d20; }
     .btn-success { background: #34c759; }
     .btn-success:hover { background: #28a745; }
+    .btn-split-active { background: #1d1d1f !important; color: #fff !important; border-color: #1d1d1f !important; }
 
     /* Expense list */
     .expense-item {
@@ -273,7 +274,10 @@
           <div class="form-row">
             <div class="form-group">
               <label>Amount (€)</label>
-              <input type="number" id="input-amount" step="0.01" min="0.01" required placeholder="0.00">
+              <div style="display:flex;gap:0.5rem;align-items:center;">
+                <input type="number" id="input-amount" step="0.01" min="0.01" required placeholder="0.00" style="flex:1;">
+                <button type="button" class="btn btn-outline btn-sm" id="btn-split" title="Split in half" style="font-size:1rem;padding:0.4rem 0.7rem;line-height:1;">½</button>
+              </div>
             </div>
             <div class="form-group">
               <label>Date</label>
@@ -397,6 +401,8 @@
     ];
 
     let editingId = null;
+    let splitActive = false;
+    let splitOriginalValue = null;
 
     let state = {
       expenses: [],
@@ -696,12 +702,23 @@
 
     function cancelEdit() {
       editingId = null;
+      resetSplitButton();
       document.getElementById('expense-form').reset();
       document.getElementById('receipt-previews').innerHTML = '';
       document.getElementById('input-date').value = new Date().toISOString().split('T')[0];
       document.getElementById('btn-submit-expense').textContent = 'Add Expense';
       document.getElementById('btn-cancel-edit').classList.add('hidden');
       switchTab('list');
+    }
+
+    function resetSplitButton() {
+      splitActive = false;
+      splitOriginalValue = null;
+      const btn = document.getElementById('btn-split');
+      if (btn) {
+        btn.classList.remove('btn-split-active');
+        btn.classList.add('btn-outline');
+      }
     }
 
     function addExpense(e) {
@@ -745,6 +762,7 @@
 
       save();
       renderAll();
+      resetSplitButton();
       document.getElementById('expense-form').reset();
       document.getElementById('receipt-previews').innerHTML = '';
       document.getElementById('input-date').value = new Date().toISOString().split('T')[0];
@@ -908,8 +926,27 @@
       URL.revokeObjectURL(url);
     });
     document.getElementById('btn-cancel-edit').addEventListener('click', cancelEdit);
+    document.getElementById('btn-split').addEventListener('click', function() {
+      const input = document.getElementById('input-amount');
+      const val = parseFloat(input.value);
+      if (!val || val <= 0) return;
+
+      if (!splitActive) {
+        splitOriginalValue = input.value;
+        input.value = (val / 2).toFixed(2);
+        splitActive = true;
+        this.classList.add('btn-split-active');
+        this.classList.remove('btn-outline');
+      } else {
+        input.value = splitOriginalValue;
+        splitActive = false;
+        this.classList.remove('btn-split-active');
+        this.classList.add('btn-outline');
+      }
+    });
     document.getElementById('btn-fab').addEventListener('click', () => {
       if (editingId) cancelEdit();
+      resetSplitButton();
       document.getElementById('expense-form').reset();
       document.getElementById('receipt-previews').innerHTML = '';
       document.getElementById('input-date').value = new Date().toISOString().split('T')[0];
