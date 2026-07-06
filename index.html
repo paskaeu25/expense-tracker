@@ -465,7 +465,10 @@
     }
 
     function renderRecent() {
-      const sorted = [...state.expenses].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
+      const sorted = [...state.expenses].sort((a, b) => {
+        const dc = b.date.localeCompare(a.date);
+        return dc !== 0 ? dc : b.id.localeCompare(a.id);
+      }).slice(0, 5);
       const el = document.getElementById('recent-expenses');
       if (!sorted.length) { el.innerHTML = '<div class="empty">No expenses yet</div>'; return; }
       renderExpensesRaw(sorted, el);
@@ -517,7 +520,10 @@
         filtered = filtered.filter(e => e.date <= dateTo);
       }
 
-      const sorted = [...filtered].sort((a, b) => b.date.localeCompare(a.date));
+      const sorted = [...filtered].sort((a, b) => {
+        const dc = b.date.localeCompare(a.date);
+        return dc !== 0 ? dc : b.id.localeCompare(a.id);
+      });
       if (!sorted.length) {
         el.innerHTML = state.expenses.length
           ? '<div class="empty">No expenses match your filters</div>'
