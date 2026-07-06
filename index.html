@@ -907,8 +907,37 @@
       reader.onload = function(e) {
         try {
           const data = JSON.parse(e.target.result);
-          if (!Array.isArray(data)) throw new Error('JSON must be an array of expenses');
-          const valid = data.filter(e => e.amount && e.date && e.category);
+          let expensesToImport = data;
+          let categoriesToImport = null;
+
+          // Detect new format: object with version/expenses/categories keys
+          if (data && typeof data === 'object' && !Array.isArray(data)) {
+            expensesToImport = data.expenses || [];
+            categoriesToImport = data.categories || null;
+          }
+
+          // Merge categories from import
+          if (categoriesToImport && Array.isArray(categoriesToImport)) {
+            categoriesToImport.forEach(impCat => {
+              if (!impCat || !impCat.name) return;
+              const existing = state.categories.find(
+                c => c.name.toLowerCase() === impCat.name.toLowerCase()
+              );
+              if (existing) {
+                existing.color = impCat.color || '#8e8e93';
+              } else {
+                state.categories.push({
+                  name: impCat.name,
+                  color: impCat.color || '#8e8e93'
+                });
+              }
+            });
+            save(); // persist categories before expenses
+          }
+
+          // Validate and merge expenses
+          if (!Array.isArray(expensesToImport)) throw new Error('JSON must contain an array of expenses');
+          const valid = expensesToImport.filter(e => e.amount && e.date && e.category);
           if (!valid.length) throw new Error('No valid expense entries found');
           const count = valid.length;
           state.expenses = state.expenses.concat(valid);
@@ -916,7 +945,7 @@
           result.innerHTML = `<div style="color:#34c759;font-weight:500;">Imported ${count} expenses successfully</div>`;
           fileInput.value = '';
         } catch (err) {
-          result.innerHTML = `<div style="color:#ff3b30;">Error: ${err.message}</div>`;
+          result.innerHTML = `<div style="color:#8e8e93;">Error: ${err.message}</div>`;
         }
       };
       reader.readAsText(file);
@@ -955,7 +984,12 @@
     document.getElementById('filter-clear').addEventListener('click', clearFilters);
     document.getElementById('btn-export-data').addEventListener('click', () => {
       if (!state.expenses.length) return alert('No data to export');
-      const blob = new Blob([JSON.stringify(state.expenses, null, 2)], { type: 'application/json' });
+      const exportData = {
+        version: 1,
+        expenses: state.expenses,
+        categories: state.categories
+      };
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url; a.download = 'expense-tracker-data.json'; a.click();
