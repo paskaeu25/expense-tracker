@@ -935,6 +935,23 @@
             save(); // persist categories before expenses
           }
 
+          // Infer missing categories from expense data (covers legacy flat-array exports)
+          if (Array.isArray(expensesToImport)) {
+            const inferred = new Set();
+            expensesToImport.forEach(e => {
+              if (e && e.category) {
+                const exists = state.categories.some(
+                  c => c.name.toLowerCase() === e.category.toLowerCase()
+                );
+                if (!exists) inferred.add(e.category);
+              }
+            });
+            inferred.forEach(name => {
+              state.categories.push({ name, color: '#8e8e93' });
+            });
+            if (inferred.size > 0) save();
+          }
+
           // Validate and merge expenses
           if (!Array.isArray(expensesToImport)) throw new Error('JSON must contain an array of expenses');
           const valid = expensesToImport.filter(e => e.amount && e.date && e.category);
