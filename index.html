@@ -911,9 +911,10 @@
           let categoriesToImport = null;
 
           // Detect new format: object with version/expenses/categories keys
-          if (data && typeof data === 'object' && !Array.isArray(data)) {
-            expensesToImport = data.expenses || [];
-            categoriesToImport = data.categories || null;
+          if (data && typeof data === 'object' && !Array.isArray(data) && 'expenses' in data) {
+            const raw = data.expenses;
+            expensesToImport = Array.isArray(raw) ? raw : [];
+            categoriesToImport = Array.isArray(data.categories) ? data.categories : null;
           }
 
           // Merge categories from import
@@ -953,7 +954,15 @@
           }
 
           // Validate and merge expenses
-          if (!Array.isArray(expensesToImport)) throw new Error('JSON must contain an array of expenses');
+          if (!Array.isArray(expensesToImport)) {
+            const actualType = Array.isArray(data) ? 'array' : typeof data;
+            const hasVersion = data && typeof data === 'object' && 'version' in data;
+            const hasExpenses = data && typeof data === 'object' && 'expenses' in data;
+            const expensesType = hasExpenses ? typeof data.expenses + (Array.isArray(data.expenses) ? '/array' : '') : 'N/A';
+            throw new Error(
+              `JSON must contain an array of expenses. Detected: top-level=${actualType}, version=${hasVersion}, hasExpenses=${hasExpenses}, expensesType=${expensesType}`
+            );
+          }
           const valid = expensesToImport.filter(e => e.amount && e.date && e.category);
           if (!valid.length) throw new Error('No valid expense entries found');
           const count = valid.length;
