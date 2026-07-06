@@ -189,9 +189,8 @@
     }
     .filter-input:focus { border-color: #1d1d1f; }
     .filter-input[type="text"] { flex: 1; min-width: 140px; }
-    .filter-input[type="date"] { width: 130px; }
+    .filter-input[type="month"] { width: 150px; }
     .filter-bar select { flex: 0 0 auto; min-width: 120px; }
-    .filter-sep { color: #8e8e93; font-size: 0.9rem; }
 
     @media (max-width: 640px) {
       .fab { bottom: 1rem; right: 1rem; width: 50px; height: 50px; font-size: 1.5rem; }
@@ -230,9 +229,8 @@
       .expense-actions { width: 100%; justify-content: flex-end; }
       .filter-bar { flex-direction: column; align-items: stretch; }
       .filter-input[type="text"] { min-width: 0; }
-      .filter-input[type="date"] { width: 100%; }
+      .filter-input[type="month"] { width: 100%; }
       .filter-bar select { min-width: 0; }
-      .filter-sep { display: none; }
     }
   </style>
 </head>
@@ -321,9 +319,7 @@
           <select class="filter-input" id="filter-category">
             <option value="">All categories</option>
           </select>
-          <input type="date" class="filter-input filter-date" id="filter-date-from" title="From date">
-          <span class="filter-sep">—</span>
-          <input type="date" class="filter-input filter-date" id="filter-date-to" title="To date">
+          <input type="month" class="filter-input" id="filter-month" placeholder="yyyy-mm">
           <button class="btn btn-sm btn-outline" id="filter-clear" style="flex-shrink:0;">Clear</button>
         </div>
         <div id="expense-list"></div>
@@ -502,8 +498,7 @@
       // Read filters
       const searchTerm = (document.getElementById('filter-search').value || '').toLowerCase().trim();
       const catFilter = document.getElementById('filter-category').value;
-      const dateFrom = document.getElementById('filter-date-from').value;
-      const dateTo = document.getElementById('filter-date-to').value;
+      const monthFilter = document.getElementById('filter-month').value;
 
       // Apply filters
       let filtered = [...state.expenses];
@@ -513,11 +508,8 @@
       if (catFilter) {
         filtered = filtered.filter(e => e.category === catFilter);
       }
-      if (dateFrom) {
-        filtered = filtered.filter(e => e.date >= dateFrom);
-      }
-      if (dateTo) {
-        filtered = filtered.filter(e => e.date <= dateTo);
+      if (monthFilter) {
+        filtered = filtered.filter(e => e.date.startsWith(monthFilter));
       }
 
       const sorted = [...filtered].sort((a, b) => {
@@ -904,8 +896,7 @@
     function clearFilters() {
       document.getElementById('filter-search').value = '';
       document.getElementById('filter-category').value = '';
-      document.getElementById('filter-date-from').value = '';
-      document.getElementById('filter-date-to').value = '';
+      document.getElementById('filter-month').value = '';
       renderAllExpenses();
     }
 
@@ -920,8 +911,7 @@
     document.getElementById('btn-clear').addEventListener('click', clearAll);
     document.getElementById('filter-search').addEventListener('input', renderAllExpenses);
     document.getElementById('filter-category').addEventListener('change', renderAllExpenses);
-    document.getElementById('filter-date-from').addEventListener('change', renderAllExpenses);
-    document.getElementById('filter-date-to').addEventListener('change', renderAllExpenses);
+    document.getElementById('filter-month').addEventListener('change', renderAllExpenses);
     document.getElementById('filter-clear').addEventListener('click', clearFilters);
     document.getElementById('btn-export-data').addEventListener('click', () => {
       if (!state.expenses.length) return alert('No data to export');
