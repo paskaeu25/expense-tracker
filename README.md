@@ -6,8 +6,10 @@ A minimal expense tracking web app with local storage, category management, and 
 
 - Add expenses with amount, date, category, and notes
 - Attach receipt images (up to 3 per expense)
+- Quick split: ½ toggle halves the amount for joint expenses
 - Dashboard with monthly spending summary, doughnut chart, and top categories
-- Custom categories with color coding
+- Default categories: Groceries, Eating Out, Transport, Utilities, Entertainment, Health, Shopping, Travel, Other
+- Filter by year + month dropdowns to browse past expenses
 - CSV export
 - Data import/export as JSON for cross-device transfer
 - Full offline support (localStorage)
