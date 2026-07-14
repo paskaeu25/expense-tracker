@@ -207,6 +207,7 @@
     .month-nav {
       display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;
     }
+    #view-dashboard { touch-action: pan-y; }
     .month-nav button {
       background: none; border: none; font-size: 1.2rem; cursor: pointer; padding: 0.3rem 0.6rem; border-radius: 8px;
     }
@@ -896,6 +897,26 @@
       state.currentMonth.setMonth(state.currentMonth.getMonth() + 1);
       renderAll();
     });
+
+    // === Swipe month nav ===
+    (function() {
+      const dashboard = document.getElementById('view-dashboard');
+      let startX = 0;
+      dashboard.addEventListener('touchstart', (e) => {
+        startX = e.changedTouches[0].clientX;
+      }, { passive: true });
+      dashboard.addEventListener('touchend', (e) => {
+        const endX = e.changedTouches[0].clientX;
+        const diff = startX - endX;
+        if (Math.abs(diff) < 50) return;
+        if (diff > 0) {
+          state.currentMonth.setMonth(state.currentMonth.getMonth() + 1);
+        } else {
+          state.currentMonth.setMonth(state.currentMonth.getMonth() - 1);
+        }
+        renderAll();
+      }, { passive: true });
+    })();
 
     // === Import ===
     function handleImport() {
