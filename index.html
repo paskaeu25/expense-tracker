@@ -16,7 +16,7 @@
       color: #1d1d1f;
       line-height: 1.5;
     }
-    .container { max-width: 800px; margin: 0 auto; padding: 1.5rem; }
+    .container { max-width: 800px; margin: 0 auto; padding: 1.5rem; touch-action: pan-y; }
 
     /* Tabs */
     .tabs {
@@ -269,7 +269,7 @@
         <button id="next-month">&rarr;</button>
       </div>
       <div class="summary-grid" id="summary-cards"></div>
-      <div class="card">
+      <div class="card" id="chart-card">
         <h2>Spending by Category</h2>
         <div class="chart-wrap"><canvas id="chart-pie"></canvas></div>
         <div id="top-categories"></div>
@@ -915,14 +915,15 @@
       renderAll();
     });
 
-    // === Swipe month nav (dashboard) ===
+    // === Swipe month nav (chart card only) ===
     (function() {
-      const dashboard = document.getElementById('view-dashboard');
+      const card = document.getElementById('chart-card');
+      if (!card) return;
       let startX = 0;
-      dashboard.addEventListener('touchstart', (e) => {
+      card.addEventListener('touchstart', (e) => {
         startX = e.changedTouches[0].clientX;
       }, { passive: true });
-      dashboard.addEventListener('touchend', (e) => {
+      card.addEventListener('touchend', (e) => {
         const endX = e.changedTouches[0].clientX;
         const diff = startX - endX;
         if (Math.abs(diff) < 50) return;
@@ -935,18 +936,24 @@
       }, { passive: true });
     })();
 
-    // === Swipe page nav (tab bar) ===
+    // === Swipe page nav (content area, except chart card) ===
     (function() {
-      const tabs = document.querySelector('.tabs');
+      const app = document.getElementById('app');
       const TAB_ORDER = ['dashboard', 'list', 'categories', 'import'];
-      let startX = 0;
-      tabs.addEventListener('touchstart', (e) => {
+      let startX = 0, startY = 0;
+      app.addEventListener('touchstart', (e) => {
         startX = e.changedTouches[0].clientX;
+        startY = e.changedTouches[0].clientY;
       }, { passive: true });
-      tabs.addEventListener('touchend', (e) => {
+      app.addEventListener('touchend', (e) => {
         const endX = e.changedTouches[0].clientX;
+        const endY = e.changedTouches[0].clientY;
         const dx = startX - endX;
-        if (Math.abs(dx) < 40) return;
+        const dy = startY - endY;
+        if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+        const target = e.target;
+        // Don't page-swip when touch was on the chart card
+        if (target && target.closest('#chart-card')) return;
         const currentTab = document.querySelector('.tab.active');
         if (!currentTab) return;
         const idx = TAB_ORDER.indexOf(currentTab.dataset.tab);
