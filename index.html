@@ -229,8 +229,6 @@
     .month-label-clickable:hover { background: #f0f0f0; }
     #month-picker { display: none; }
 
-    .swipe-area { touch-action: pan-y; min-height: 100%; }
-
     /* Mobile */
     @media (max-width: 640px) {
       .container { padding: 0.75rem; }
@@ -262,7 +260,6 @@
       <button class="tab" data-tab="import">Import</button>
     </div>
 
-    <div class="swipe-area" id="swipe-area">
     <!-- DASHBOARD -->
     <div id="view-dashboard">
       <div class="month-nav">
@@ -412,8 +409,6 @@
         <p style="color:#8e8e93;font-size:0.9rem;margin-bottom:1rem;">Remove all expenses and reset to default categories.</p>
         <button class="btn btn-danger" id="btn-clear">Clear All Data</button>
       </div>
-    </div>
-
     </div>
     <!-- FAB -->
     <button class="fab" id="btn-fab" title="Add expense">+</button>
@@ -920,21 +915,38 @@
       renderAll();
     });
 
-    // === Swipe page nav ===
+    // === Swipe month nav (dashboard) ===
     (function() {
-      const area = document.getElementById('swipe-area');
-      const TAB_ORDER = ['dashboard', 'list', 'categories', 'import'];
-      let startX = 0, startY = 0;
-      area.addEventListener('touchstart', (e) => {
+      const dashboard = document.getElementById('view-dashboard');
+      let startX = 0;
+      dashboard.addEventListener('touchstart', (e) => {
         startX = e.changedTouches[0].clientX;
-        startY = e.changedTouches[0].clientY;
       }, { passive: true });
-      area.addEventListener('touchend', (e) => {
+      dashboard.addEventListener('touchend', (e) => {
         const endX = e.changedTouches[0].clientX;
-        const endY = e.changedTouches[0].clientY;
+        const diff = startX - endX;
+        if (Math.abs(diff) < 50) return;
+        if (diff > 0) {
+          state.currentMonth.setMonth(state.currentMonth.getMonth() + 1);
+        } else {
+          state.currentMonth.setMonth(state.currentMonth.getMonth() - 1);
+        }
+        renderAll();
+      }, { passive: true });
+    })();
+
+    // === Swipe page nav (tab bar) ===
+    (function() {
+      const tabs = document.querySelector('.tabs');
+      const TAB_ORDER = ['dashboard', 'list', 'categories', 'import'];
+      let startX = 0;
+      tabs.addEventListener('touchstart', (e) => {
+        startX = e.changedTouches[0].clientX;
+      }, { passive: true });
+      tabs.addEventListener('touchend', (e) => {
+        const endX = e.changedTouches[0].clientX;
         const dx = startX - endX;
-        const dy = startY - endY;
-        if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+        if (Math.abs(dx) < 40) return;
         const currentTab = document.querySelector('.tab.active');
         if (!currentTab) return;
         const idx = TAB_ORDER.indexOf(currentTab.dataset.tab);
