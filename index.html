@@ -225,6 +225,9 @@
     }
     .month-nav button:hover { background: #f0f0f0; }
     .month-nav span { font-weight: 600; font-size: 1rem; }
+    .month-label-clickable { cursor: pointer; border-radius: 8px; padding: 0.2rem 0.6rem; }
+    .month-label-clickable:hover { background: #f0f0f0; }
+    #month-picker { display: none; }
 
     /* Mobile */
     @media (max-width: 640px) {
@@ -261,7 +264,8 @@
     <div id="view-dashboard">
       <div class="month-nav">
         <button id="prev-month">&larr;</button>
-        <span id="month-label"></span>
+        <span id="month-label" class="month-label-clickable"></span>
+        <input type="month" id="month-picker">
         <button id="next-month">&rarr;</button>
       </div>
       <div class="summary-grid" id="summary-cards"></div>
@@ -1097,6 +1101,20 @@
     });
     document.getElementById('receipt-modal').addEventListener('click', function(e) {
       if (e.target === this) this.classList.add('hidden');
+    });
+
+    // === Month picker ===
+    document.getElementById('month-label').addEventListener('click', () => {
+      const d = state.currentMonth;
+      const picker = document.getElementById('month-picker');
+      picker.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      picker.showPicker();
+    });
+    document.getElementById('month-picker').addEventListener('change', function() {
+      if (!this.value) return;
+      const [y, m] = this.value.split('-').map(Number);
+      state.currentMonth = new Date(y, m - 1, 1);
+      renderAll();
     });
 
     // === Init ===
