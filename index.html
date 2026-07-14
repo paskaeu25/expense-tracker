@@ -188,10 +188,22 @@
       min-width: 0;
     }
     .filter-input:focus { border-color: #1d1d1f; }
-    .filter-input[type="text"] { flex: 1; min-width: 140px; }
-    #filter-year { width: 110px; }
-    #filter-month { width: 120px; }
-    .filter-bar select { flex: 0 0 auto; min-width: 80px; }
+    .filter-search-wrap { display: flex; flex: 1; gap: 0.5rem; align-items: center; }
+    .filter-search-wrap input { flex: 1; min-width: 140px; }
+    #filter-search { font-size: 0.95rem; padding: 0.55rem 0.8rem; }
+    .filter-toggle {
+      background: none; border: 1.5px solid #e5e5e5; border-radius: 10px;
+      padding: 0.45rem 0.65rem; cursor: pointer; font-size: 0.85rem; color: #8e8e93;
+      transition: all 0.2s; white-space: nowrap; flex-shrink: 0; line-height: 1;
+    }
+    .filter-toggle:hover { border-color: #1d1d1f; color: #1d1d1f; }
+    .filter-toggle.active { border-color: #1d1d1f; color: #1d1d1f; background: #f5f5f5; }
+    .filter-extras {
+      display: flex; gap: 0.5rem; flex-wrap: wrap; width: 100%;
+      overflow: hidden; max-height: 0; opacity: 0; transition: max-height 0.25s ease, opacity 0.2s ease;
+    }
+    .filter-extras.open { max-height: 200px; opacity: 1; }
+    .filter-extras select { flex: 1; min-width: 100px; }
 
     @media (max-width: 640px) {
       .fab { bottom: 1rem; right: 1rem; width: 50px; height: 50px; font-size: 1.5rem; }
@@ -230,10 +242,7 @@
       .expense-item { flex-wrap: wrap; gap: 0.3rem; }
       .expense-actions { width: 100%; justify-content: flex-end; }
       .filter-bar { flex-direction: column; align-items: stretch; }
-      .filter-input[type="text"] { min-width: 0; }
-      #filter-year { width: 100%; }
-      #filter-month { width: 100%; }
-      .filter-bar select { min-width: 0; }
+      .filter-search-wrap input { min-width: 0; }
     }
   </style>
 </head>
@@ -318,29 +327,34 @@
           <button class="btn btn-sm btn-outline" id="btn-export">Export CSV</button>
         </div>
         <div class="filter-bar" id="filter-bar">
-          <input type="text" class="filter-input" id="filter-search" placeholder="Search notes..." autocomplete="off">
-          <select class="filter-input" id="filter-category">
-            <option value="">All categories</option>
-          </select>
-          <select class="filter-input" id="filter-year">
-            <option value="">All years</option>
-          </select>
-          <select class="filter-input" id="filter-month">
-            <option value="">All months</option>
-            <option value="01">January</option>
-            <option value="02">February</option>
-            <option value="03">March</option>
-            <option value="04">April</option>
-            <option value="05">May</option>
-            <option value="06">June</option>
-            <option value="07">July</option>
-            <option value="08">August</option>
-            <option value="09">September</option>
-            <option value="10">October</option>
-            <option value="11">November</option>
-            <option value="12">December</option>
-          </select>
-          <button class="btn btn-sm btn-outline" id="filter-clear" style="flex-shrink:0;">Clear</button>
+          <div class="filter-search-wrap">
+            <input type="text" class="filter-input" id="filter-search" placeholder="Search notes..." autocomplete="off">
+            <button class="filter-toggle" id="filter-toggle" title="More filters">▾ Filters</button>
+          </div>
+          <div class="filter-extras" id="filter-extras">
+            <select class="filter-input" id="filter-category">
+              <option value="">All categories</option>
+            </select>
+            <select class="filter-input" id="filter-year">
+              <option value="">All years</option>
+            </select>
+            <select class="filter-input" id="filter-month">
+              <option value="">All months</option>
+              <option value="01">January</option>
+              <option value="02">February</option>
+              <option value="03">March</option>
+              <option value="04">April</option>
+              <option value="05">May</option>
+              <option value="06">June</option>
+              <option value="07">July</option>
+              <option value="08">August</option>
+              <option value="09">September</option>
+              <option value="10">October</option>
+              <option value="11">November</option>
+              <option value="12">December</option>
+            </select>
+            <button class="btn btn-sm btn-outline" id="filter-clear" style="flex-shrink:0;">Clear</button>
+          </div>
         </div>
         <div id="expense-list"></div>
       </div>
@@ -1029,6 +1043,10 @@
     document.getElementById('filter-year').addEventListener('change', renderAllExpenses);
     document.getElementById('filter-month').addEventListener('change', renderAllExpenses);
     document.getElementById('filter-clear').addEventListener('click', clearFilters);
+    document.getElementById('filter-toggle').addEventListener('click', () => {
+      document.getElementById('filter-extras').classList.toggle('open');
+      document.getElementById('filter-toggle').classList.toggle('active');
+    });
     document.getElementById('btn-export-data').addEventListener('click', () => {
       if (!state.expenses.length) return alert('No data to export');
       const exportData = {
