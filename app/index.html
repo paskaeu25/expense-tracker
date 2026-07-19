@@ -1173,6 +1173,7 @@
         if (Filesystem) {
           const ts = Date.now();
           const labels = { DOCUMENTS: 'Documents', EXTERNAL: 'App folder', CACHE: 'Cache' };
+          let savedDir = null;
           for (const dir of ['DOCUMENTS', 'EXTERNAL', 'CACHE']) {
             try {
               await Filesystem.writeFile({
@@ -1181,11 +1182,35 @@
                 directory: dir,
                 encoding: 'utf8'
               });
-              alert('Saved to ' + (labels[dir] || dir));
+              savedDir = dir;
               break;
             } catch (e) {
               if (dir === 'CACHE') alert('Could not save: ' + e.message);
             }
+          }
+          if (savedDir) {
+            const { Share } = Capacitor.Plugins;
+            if (Share) {
+              try {
+                if (savedDir !== 'CACHE') {
+                  await Filesystem.writeFile({
+                    path: 'expense-tracker-data-' + ts + '.json',
+                    data: jsonStr,
+                    directory: 'CACHE',
+                    encoding: 'utf8'
+                  });
+                }
+                const r = await Filesystem.getUri({
+                  path: 'expense-tracker-data-' + ts + '.json',
+                  directory: 'CACHE'
+                });
+                await Share.share({
+                  title: 'Expense Tracker Data',
+                  files: [r.uri]
+                });
+              } catch (_) {}
+            }
+            alert('Saved to ' + (labels[savedDir] || savedDir));
           }
         }
         } else {
