@@ -48,7 +48,7 @@ jobs:
       - name: Apply status bar styling
         run: |
           FILE="android/app/src/main/res/values/styles.xml"
-          sed -i 's|<item name="android:background">@null</item>|<item name="android:background">@null</item>\n        <item name="android:statusBarColor">#f5f5f7</item>\n        <item name="android:windowLightStatusBar">true</item>|' "$FILE"
+          sed -i 's|<item name="android:background">@null</item>|<item name="android:background">@null</item>\n        <item name="android:statusBarColor">#f5f5f7</item>\n        <item name="android:windowLightStatusBar">true</item>\n        <item name="android:navigationBarColor">#f5f5f7</item>\n        <item name="android:windowLightNavigationBar">true</item>|' "$FILE"
 
       - name: Build APK
         run: |

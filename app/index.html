@@ -16,7 +16,7 @@
       color: #1d1d1f;
       line-height: 1.5;
     }
-    .container { max-width: 800px; margin: 0 auto; padding: calc(1.5rem + env(safe-area-inset-top, 0px)) 1.5rem 1.5rem 1.5rem; touch-action: pan-y; }
+    .container { max-width: 800px; margin: 0 auto; padding: calc(1.5rem + env(safe-area-inset-top, 0px)) 1.5rem calc(1.5rem + env(safe-area-inset-bottom, 0px)) 1.5rem; touch-action: pan-y; }
 
     /* Tabs */
     .tabs {
@@ -233,7 +233,7 @@
 
     /* Mobile */
     @media (max-width: 640px) {
-      .container { padding: calc(0.75rem + env(safe-area-inset-top, 0px)) 0.75rem 0.75rem 0.75rem; }
+      .container { padding: calc(0.75rem + env(safe-area-inset-top, 0px)) 0.75rem calc(0.75rem + env(safe-area-inset-bottom, 0px)) 0.75rem; }
       .tabs { gap: 0.25rem; padding: 0.4rem; }
       .tab { font-size: 0.75rem; padding: 0.5rem 0.4rem; white-space: nowrap; flex: 1; }
       .tab svg { width: 16px; height: 16px; }
@@ -949,28 +949,7 @@
       renderAll();
     });
 
-    // === Swipe month nav (chart card only) ===
-    (function() {
-      const card = document.getElementById('chart-card');
-      if (!card) return;
-      let startX = 0;
-      card.addEventListener('touchstart', (e) => {
-        startX = e.changedTouches[0].clientX;
-      }, { passive: true });
-      card.addEventListener('touchend', (e) => {
-        const endX = e.changedTouches[0].clientX;
-        const diff = startX - endX;
-        if (Math.abs(diff) < 50) return;
-        if (diff > 0) {
-          state.currentMonth.setMonth(state.currentMonth.getMonth() + 1);
-        } else {
-          state.currentMonth.setMonth(state.currentMonth.getMonth() - 1);
-        }
-        renderAll();
-      }, { passive: true });
-    })();
-
-    // === Swipe page nav (content area, except chart card) ===
+    // === Swipe page nav ===
     (function() {
       const app = document.getElementById('app');
       const TAB_ORDER = ['dashboard', 'list', 'categories', 'import'];
@@ -985,9 +964,6 @@
         const dx = startX - endX;
         const dy = startY - endY;
         if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
-        const target = e.target;
-        // Don't page-swip when touch was on the chart card
-        if (target && target.closest('#chart-card')) return;
         const currentTab = document.querySelector('.tab.active');
         if (!currentTab) return;
         const idx = TAB_ORDER.indexOf(currentTab.dataset.tab);
