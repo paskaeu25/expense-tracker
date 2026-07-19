@@ -471,6 +471,7 @@
       localStorage.setItem('expenses', JSON.stringify(state.expenses));
       localStorage.setItem('categories', JSON.stringify(state.categories));
       saveToPreferences();
+      saveToExternalStorage();
     }
     function load() {
       const e = localStorage.getItem('expenses');
@@ -497,6 +498,38 @@
         const { value } = await C.Plugins.Preferences.get({ key: 'expense-tracker' });
         if (!value) return false;
         const data = JSON.parse(value);
+        if (!data.expenses?.length) return false;
+        state.expenses = data.expenses;
+        state.categories = data.categories || state.categories;
+        save();
+        return true;
+      } catch (_) { return false; }
+    }
+
+    async function saveToExternalStorage() {
+      const C = window.Capacitor;
+      if (!C?.isNativePlatform?.() || !C.Plugins?.Filesystem) return;
+      try {
+        await C.Plugins.Filesystem.writeFile({
+          path: 'expense-tracker-backup.json',
+          data: JSON.stringify({ version: 1, expenses: state.expenses, categories: state.categories }),
+          directory: 'EXTERNAL_STORAGE',
+          encoding: 'utf8'
+        });
+      } catch (_) {}
+    }
+
+    async function restoreFromExternalStorage() {
+      const C = window.Capacitor;
+      if (!C?.isNativePlatform?.() || !C.Plugins?.Filesystem) return false;
+      try {
+        const result = await C.Plugins.Filesystem.readFile({
+          path: 'expense-tracker-backup.json',
+          directory: 'EXTERNAL_STORAGE',
+          encoding: 'utf8'
+        });
+        if (!result?.data) return false;
+        const data = JSON.parse(result.data);
         if (!data.expenses?.length) return false;
         state.expenses = data.expenses;
         state.categories = data.categories || state.categories;
@@ -1237,19 +1270,21 @@
 
     // Auto-seed from bundled JSON on first visit
     if (!state.expenses.length) {
-      restoreFromPreferences().then(restored => {
-        if (restored) { renderAll(); return; }
-        fetch('./june-expenses.json')
-          .then(r => r.ok ? r.json() : null)
-          .then(data => {
-            if (data && data.length) {
-              state.expenses = data;
-              save();
-              renderAll();
-            }
-          })
-          .catch(() => {});
-      });
+      restoreFromPreferences()
+        .then(restored => restored || restoreFromExternalStorage())
+        .then(restored => {
+          if (restored) { renderAll(); return; }
+          fetch('./june-expenses.json')
+            .then(r => r.ok ? r.json() : null)
+            .then(data => {
+              if (data && data.length) {
+                state.expenses = data;
+                save();
+                renderAll();
+              }
+            })
+            .catch(() => {});
+        });
     }
 
     renderAll();

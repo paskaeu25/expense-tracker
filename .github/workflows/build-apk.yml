@@ -72,7 +72,13 @@ jobs:
           </data-extraction-rules>
           EOF
           MANIFEST="android/app/src/main/AndroidManifest.xml"
-          sed -i 's|android:allowBackup="true"|android:allowBackup="true"\n        android:fullBackupContent="@xml/backup_rules"\n        android:dataExtractionRules="@xml/data_extraction_rules"|' "$MANIFEST"
+          sed -i 's|android:allowBackup="true"|android:allowBackup="true"\n        android:fullBackupContent="@xml/backup_rules"\n        android:dataExtractionRules="@xml/data_extraction_rules"\n        android:requestLegacyExternalStorage="true"|' "$MANIFEST"
+
+      - name: Add storage permissions for external backup
+        run: |
+          MANIFEST="android/app/src/main/AndroidManifest.xml"
+          # Add WRITE_EXTERNAL_STORAGE after INTERNET permission
+          sed -i 's|<uses-permission android:name="android.permission.INTERNET" />|<uses-permission android:name="android.permission.INTERNET" />\n    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />\n    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />|' "$MANIFEST"
 
       - name: Apply status bar styling
         run: |
