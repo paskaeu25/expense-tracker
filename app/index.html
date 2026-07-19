@@ -1165,44 +1165,53 @@
       const jsonStr = JSON.stringify(exportData, null, 2);
 
       const Capacitor = window.Capacitor;
-      if (Capacitor?.isNativePlatform?.() && Capacitor.Plugins?.Filesystem && Capacitor.Plugins?.Share) {
+      if (Capacitor?.isNativePlatform?.()) {
         const { Filesystem } = Capacitor.Plugins;
-        const { Share } = Capacitor.Plugins;
-        const dirs = ['DOWNLOADS', 'EXTERNAL_STORAGE', 'DATA'];
         let savedDir = null;
-        for (const dir of dirs) {
-          try {
-            await Filesystem.writeFile({
-              path: 'expense-tracker-data.json',
-              data: jsonStr,
-              directory: dir,
-              encoding: 'utf8'
-            });
-            savedDir = dir;
-            break;
-          } catch (_) {}
-        }
-        try {
-          await Filesystem.writeFile({
-            path: 'expense-tracker-data.json',
-            data: jsonStr,
-            directory: 'CACHE',
-            encoding: 'utf8'
-          });
-          const cacheResult = await Filesystem.getUri({
-            path: 'expense-tracker-data.json',
-            directory: 'CACHE'
-          });
-          await Share.share({
-            title: 'Expense Tracker Data',
-            files: [cacheResult.uri]
-          });
-        } catch (e) {
-          if (savedDir) {
-            alert('Saved to device');
-          } else {
-            alert('Export failed: ' + e.message);
+        if (Filesystem) {
+          const dirs = ['DOCUMENTS', 'EXTERNAL_STORAGE', 'CACHE'];
+          for (const dir of dirs) {
+            try {
+              await Filesystem.writeFile({
+                path: 'expense-tracker-data.json',
+                data: jsonStr,
+                directory: dir,
+                encoding: 'utf8'
+              });
+              savedDir = dir;
+              break;
+            } catch (_) {}
           }
+        }
+        if (savedDir) {
+          const { Share } = Capacitor.Plugins;
+          if (Share) {
+            try {
+              await Filesystem.writeFile({
+                path: 'expense-tracker-data.json',
+                data: jsonStr,
+                directory: 'CACHE',
+                encoding: 'utf8'
+              });
+              const cacheResult = await Filesystem.getUri({
+                path: 'expense-tracker-data.json',
+                directory: 'CACHE'
+              });
+              await Share.share({
+                title: 'Expense Tracker Data',
+                files: [cacheResult.uri]
+              });
+            } catch (_) {}
+          }
+          const label = { DOCUMENTS: 'Documents', EXTERNAL_STORAGE: 'External Storage', CACHE: 'Cache' }[savedDir] || 'device';
+          alert('Saved to ' + label);
+        } else {
+          const blob = new Blob([jsonStr], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url; a.download = 'expense-tracker-data.json'; a.click();
+          setTimeout(() => URL.revokeObjectURL(url), 5000);
+          alert('Download started via browser');
         }
       } else {
         const blob = new Blob([jsonStr], { type: 'application/json' });
