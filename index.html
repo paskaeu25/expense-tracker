@@ -357,6 +357,8 @@
               <option value="11">November</option>
               <option value="12">December</option>
             </select>
+            <input type="date" class="filter-input" id="filter-date-from" placeholder="From date" style="flex:1;min-width:130px;">
+            <input type="date" class="filter-input" id="filter-date-to" placeholder="To date" style="flex:1;min-width:130px;">
             <button class="btn btn-sm btn-outline" id="filter-clear" style="flex-shrink:0;">Clear</button>
           </div>
         </div>
@@ -539,6 +541,8 @@
       const catFilter = document.getElementById('filter-category').value;
       const yearFilter = document.getElementById('filter-year').value;
       const monthFilter = document.getElementById('filter-month').value;
+      const dateFrom = document.getElementById('filter-date-from').value;
+      const dateTo = document.getElementById('filter-date-to').value;
 
       // Apply filters
       let filtered = [...state.expenses];
@@ -554,6 +558,12 @@
       if (monthFilter) {
         filtered = filtered.filter(e => e.date.slice(5, 7) === monthFilter);
       }
+      if (dateFrom) {
+        filtered = filtered.filter(e => e.date >= dateFrom);
+      }
+      if (dateTo) {
+        filtered = filtered.filter(e => e.date <= dateTo);
+      }
 
       const sorted = [...filtered].sort((a, b) => {
         const dc = b.date.localeCompare(a.date);
@@ -566,6 +576,9 @@
         return;
       }
 
+      // Filtered total
+      const filteredTotal = filtered.reduce((s, e) => s + Number(e.amount), 0);
+
       // Group by month
       const groups = {};
       sorted.forEach(e => {
@@ -575,7 +588,10 @@
       });
 
       const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-      let html = '';
+      let html = `<div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0 1rem;border-bottom:1px solid #f0f0f0;margin-bottom:0.5rem;">
+        <span style="font-size:0.9rem;color:#8e8e93;">Filtered total</span>
+        <span style="font-size:1.1rem;font-weight:700;">${formatMoney(filteredTotal)}</span>
+      </div>`;
       Object.keys(groups).forEach(m => {
         const [y, mon] = m.split('-');
         const label = `${monthNames[parseInt(mon)-1]} ${y}`;
@@ -1060,6 +1076,8 @@
       document.getElementById('filter-category').value = '';
       document.getElementById('filter-year').value = '';
       document.getElementById('filter-month').value = '';
+      document.getElementById('filter-date-from').value = '';
+      document.getElementById('filter-date-to').value = '';
       renderAllExpenses();
     }
 
@@ -1076,6 +1094,8 @@
     document.getElementById('filter-category').addEventListener('change', renderAllExpenses);
     document.getElementById('filter-year').addEventListener('change', renderAllExpenses);
     document.getElementById('filter-month').addEventListener('change', renderAllExpenses);
+    document.getElementById('filter-date-from').addEventListener('change', renderAllExpenses);
+    document.getElementById('filter-date-to').addEventListener('change', renderAllExpenses);
     document.getElementById('filter-clear').addEventListener('click', clearFilters);
     document.getElementById('filter-toggle').addEventListener('click', () => {
       document.getElementById('filter-extras').classList.toggle('open');
