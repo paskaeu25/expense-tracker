@@ -1,3 +1,7 @@
 .vercel
 .env*
 june-expenses.json
+app/node_modules/
+app/android/
+app/dist/
+.DS_Store

@@ -1,0 +1,9 @@
+.vercel
+.env*
+june-expenses.json
+
+# Capacitor / Android
+android/
+dist/
+node_modules/
+*.local
