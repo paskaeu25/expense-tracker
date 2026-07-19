@@ -1095,18 +1095,44 @@
       document.getElementById('filter-extras').classList.toggle('open');
       document.getElementById('filter-toggle').classList.toggle('active');
     });
-    document.getElementById('btn-export-data').addEventListener('click', () => {
+    document.getElementById('btn-export-data').addEventListener('click', async () => {
       if (!state.expenses.length) return alert('No data to export');
       const exportData = {
         version: 1,
         expenses: state.expenses,
         categories: state.categories
       };
-      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = 'expense-tracker-data.json'; a.click();
-      URL.revokeObjectURL(url);
+      const jsonStr = JSON.stringify(exportData, null, 2);
+
+      const Capacitor = window.Capacitor;
+      if (Capacitor?.isNativePlatform?.() && Capacitor.Plugins?.Filesystem && Capacitor.Plugins?.Share) {
+        try {
+          const { Filesystem } = Capacitor.Plugins;
+          const { Share } = Capacitor.Plugins;
+          await Filesystem.writeFile({
+            path: 'expense-tracker-data.json',
+            data: jsonStr,
+            directory: 'CACHE',
+            encoding: 'utf8'
+          });
+          const result = await Filesystem.getUri({
+            path: 'expense-tracker-data.json',
+            directory: 'CACHE'
+          });
+          await Share.share({
+            title: 'Expense Tracker Data',
+            files: [result.uri]
+          });
+        } catch (e) {
+          alert('Export failed: ' + e.message);
+        }
+      } else {
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'expense-tracker-data.json'; a.click();
+        URL.revokeObjectURL(url);
+      }
     });
     document.getElementById('btn-cancel-edit').addEventListener('click', cancelEdit);
     document.getElementById('btn-split').addEventListener('click', function() {
