@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Expense Tracker</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,7 +16,7 @@
       color: #1d1d1f;
       line-height: 1.5;
     }
-    .container { max-width: 800px; margin: 0 auto; padding: 1.5rem; touch-action: pan-y; }
+    .container { max-width: 800px; margin: 0 auto; padding: calc(1.5rem + env(safe-area-inset-top, 0px)) 1.5rem 1.5rem 1.5rem; touch-action: pan-y; }
 
     /* Tabs */
     .tabs {
@@ -28,7 +28,9 @@
       flex: 1; padding: 0.6rem; text-align: center; border: none;
       background: transparent; border-radius: 10px; cursor: pointer;
       font-size: 0.85rem; font-weight: 500; color: #8e8e93; transition: all 0.2s;
+      display: flex; flex-direction: column; align-items: center; gap: 0.15rem;
     }
+    .tab svg { width: 18px; height: 18px; }
     .tab:hover { color: #1d1d1f; }
     .tab.active { background: #1d1d1f; color: #fff; }
 
@@ -150,7 +152,7 @@
 
     /* FAB */
     .fab {
-      position: fixed; bottom: 1.5rem; right: 1.5rem;
+      position: fixed; bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px)); right: 1.5rem;
       width: 56px; height: 56px; border-radius: 50%;
       background: #1d1d1f; color: #fff; border: none;
       font-size: 1.8rem; font-weight: 300; cursor: pointer;
@@ -231,9 +233,10 @@
 
     /* Mobile */
     @media (max-width: 640px) {
-      .container { padding: 0.75rem; }
+      .container { padding: calc(0.75rem + env(safe-area-inset-top, 0px)) 0.75rem 0.75rem 0.75rem; }
       .tabs { gap: 0.25rem; padding: 0.4rem; }
       .tab { font-size: 0.75rem; padding: 0.5rem 0.4rem; white-space: nowrap; flex: 1; }
+      .tab svg { width: 16px; height: 16px; }
       .summary-grid { grid-template-columns: repeat(3, 1fr); gap: 0.4rem; }
       .summary-card { padding: 0.7rem; }
       .summary-card .value { font-size: 1rem; }
@@ -253,11 +256,26 @@
   <div class="container" id="app">
     <!-- Tabs -->
     <div class="tabs">
-      <button class="tab active" data-tab="dashboard">Dashboard</button>
-      <button class="tab" data-tab="add" style="display:none;">Add</button>
-      <button class="tab" data-tab="list">Expenses</button>
-      <button class="tab" data-tab="categories">Categories</button>
-      <button class="tab" data-tab="import">Import</button>
+      <button class="tab active" data-tab="dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </button>
+      <button class="tab" data-tab="add" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        Add
+      </button>
+      <button class="tab" data-tab="list">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        Expenses
+      </button>
+      <button class="tab" data-tab="categories">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+        Categories
+      </button>
+      <button class="tab" data-tab="import">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Import
+      </button>
     </div>
 
     <!-- DASHBOARD -->
