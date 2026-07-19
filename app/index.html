@@ -762,8 +762,11 @@
       const colors = labels.map(l => getCategory(l).color);
 
       if (state.pieChart) state.pieChart.destroy();
-      if (labels.length) {
-        const ctx = document.getElementById('chart-pie').getContext('2d');
+      if (labels.length && typeof Chart !== 'undefined') {
+        const canvas = document.getElementById('chart-pie');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
         state.pieChart = new Chart(ctx, {
           type: 'doughnut',
           data: {
