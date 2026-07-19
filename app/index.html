@@ -470,12 +470,39 @@
     function save() {
       localStorage.setItem('expenses', JSON.stringify(state.expenses));
       localStorage.setItem('categories', JSON.stringify(state.categories));
+      saveToPreferences();
     }
     function load() {
       const e = localStorage.getItem('expenses');
       const c = localStorage.getItem('categories');
       if (e) state.expenses = JSON.parse(e);
       if (c) state.categories = JSON.parse(c);
+    }
+
+    async function saveToPreferences() {
+      const C = window.Capacitor;
+      if (!C?.isNativePlatform?.() || !C.Plugins?.Preferences) return;
+      try {
+        await C.Plugins.Preferences.set({
+          key: 'expense-tracker',
+          value: JSON.stringify({ expenses: state.expenses, categories: state.categories })
+        });
+      } catch (_) {}
+    }
+
+    async function restoreFromPreferences() {
+      const C = window.Capacitor;
+      if (!C?.isNativePlatform?.() || !C.Plugins?.Preferences) return false;
+      try {
+        const { value } = await C.Plugins.Preferences.get({ key: 'expense-tracker' });
+        if (!value) return false;
+        const data = JSON.parse(value);
+        if (!data.expenses?.length) return false;
+        state.expenses = data.expenses;
+        state.categories = data.categories || state.categories;
+        save();
+        return true;
+      } catch (_) { return false; }
     }
     load();
 
@@ -1192,16 +1219,19 @@
 
     // Auto-seed from bundled JSON on first visit
     if (!state.expenses.length) {
-      fetch('./june-expenses.json')
-        .then(r => r.ok ? r.json() : null)
-        .then(data => {
-          if (data && data.length) {
-            state.expenses = data;
-            save();
-            renderAll();
-          }
-        })
-        .catch(() => {});
+      restoreFromPreferences().then(restored => {
+        if (restored) { renderAll(); return; }
+        fetch('./june-expenses.json')
+          .then(r => r.ok ? r.json() : null)
+          .then(data => {
+            if (data && data.length) {
+              state.expenses = data;
+              save();
+              renderAll();
+            }
+          })
+          .catch(() => {});
+      });
     }
 
     renderAll();

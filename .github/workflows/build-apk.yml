@@ -45,6 +45,35 @@ jobs:
       - name: Add Android platform
         run: npx cap add android
 
+      - name: Configure Android Auto Backup
+        run: |
+          mkdir -p android/app/src/main/res/xml
+          cat > android/app/src/main/res/xml/backup_rules.xml << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <full-backup-content>
+              <include domain="sharedpref" path="."/>
+              <include domain="database" path="."/>
+              <include domain="file" path="."/>
+          </full-backup-content>
+          EOF
+          cat > android/app/src/main/res/xml/data_extraction_rules.xml << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <data-extraction-rules>
+              <cloud-backup>
+                  <include domain="sharedpref" path="."/>
+                  <include domain="database" path="."/>
+                  <include domain="file" path="."/>
+              </cloud-backup>
+              <device-transfer>
+                  <include domain="sharedpref" path="."/>
+                  <include domain="database" path="."/>
+                  <include domain="file" path="."/>
+              </device-transfer>
+          </data-extraction-rules>
+          EOF
+          MANIFEST="android/app/src/main/AndroidManifest.xml"
+          sed -i 's|android:allowBackup="true"|android:allowBackup="true"\n        android:fullBackupContent="@xml/backup_rules"\n        android:dataExtractionRules="@xml/data_extraction_rules"|' "$MANIFEST"
+
       - name: Apply status bar styling
         run: |
           FILE="android/app/src/main/res/values/styles.xml"
