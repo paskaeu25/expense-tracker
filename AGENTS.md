@@ -17,6 +17,8 @@ Scratch/experimental repo. The real project is the **expense tracker** in `app/`
 - Search & filter: keyword search + year/month dropdowns to browse past months.
 - ½ split toggle: halves the entered amount (reverts on second tap).
 - CSV/JSON export + JSON import for cross-device sync.
+- **JSON export** (Android APK): Saves `expense-tracker-data-<timestamp>.json` via `@capacitor/filesystem` trying `DOCUMENTS` → `EXTERNAL` → `CACHE`. First successful dir gets the file; then a `CACHE` copy is shared via `@capacitor/share` (share sheet). Cancel/share error caught silently. Alert shows "Saved to Documents" (or fallback dir). Web/Vercel fallback: blob URL + `a.click()` download.
+- Chart rendering guarded against CDN failure (`typeof Chart !== 'undefined'` check).
 - Data persistence across APK reinstalls: 3-layer approach — (1) Android Auto Backup (Google Drive), (2) Capacitor Preferences (SharedPreferences), (3) Filesystem `EXTERNAL_STORAGE` fallback (API 23-29). The `save()` call writes to all three on every change.
 - The `inputs/` folder has raw CSV, conversion script, and seed JSON (gitignored).
 - `june-expenses.json` is never committed (gitignored, removed from history).
@@ -44,8 +46,9 @@ Scratch/experimental repo. The real project is the **expense tracker** in `app/`
 - Build APK in Android Studio: **Build → Build APK(s)**
 - The `dist/` directory is a staging area for Capacitor (gitignored).
 - `android/` is also gitignored — each dev runs `npx cap add android` once.
-- `capacitor.config.json` and `package.json` are in `.gitignore` (not committed) because they are local dev tooling, not part of the deployed web app.
+- `capacitor.config.json` and `package.json` are tracked in git (not in `.gitignore`).
 - Vercel ignores `android/`, `dist/`, `node_modules/` via `.vercelignore`.
+- JSON export/import requires `@capacitor/filesystem` and `@capacitor/share` npm packages. `npx cap sync` registers them in the Android project.
 
 ## Build numbering
 
