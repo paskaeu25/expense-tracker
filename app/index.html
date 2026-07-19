@@ -1142,13 +1142,21 @@
             directory: 'CACHE',
             encoding: 'utf8'
           });
-          const result = await Filesystem.getUri({
+          const cacheResult = await Filesystem.getUri({
             path: 'expense-tracker-data.json',
             directory: 'CACHE'
           });
+          try {
+            await Filesystem.writeFile({
+              path: 'expense-tracker-data.json',
+              data: jsonStr,
+              directory: 'DOWNLOADS',
+              encoding: 'utf8'
+            });
+          } catch (_) {}
           await Share.share({
             title: 'Expense Tracker Data',
-            files: [result.uri]
+            files: [cacheResult.uri]
           });
         } catch (e) {
           alert('Export failed: ' + e.message);
