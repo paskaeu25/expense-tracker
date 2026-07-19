@@ -1133,9 +1133,23 @@
 
       const Capacitor = window.Capacitor;
       if (Capacitor?.isNativePlatform?.() && Capacitor.Plugins?.Filesystem && Capacitor.Plugins?.Share) {
+        const { Filesystem } = Capacitor.Plugins;
+        const { Share } = Capacitor.Plugins;
+        const dirs = ['DOWNLOADS', 'EXTERNAL_STORAGE', 'DATA'];
+        let savedDir = null;
+        for (const dir of dirs) {
+          try {
+            await Filesystem.writeFile({
+              path: 'expense-tracker-data.json',
+              data: jsonStr,
+              directory: dir,
+              encoding: 'utf8'
+            });
+            savedDir = dir;
+            break;
+          } catch (_) {}
+        }
         try {
-          const { Filesystem } = Capacitor.Plugins;
-          const { Share } = Capacitor.Plugins;
           await Filesystem.writeFile({
             path: 'expense-tracker-data.json',
             data: jsonStr,
@@ -1146,20 +1160,16 @@
             path: 'expense-tracker-data.json',
             directory: 'CACHE'
           });
-          try {
-            await Filesystem.writeFile({
-              path: 'expense-tracker-data.json',
-              data: jsonStr,
-              directory: 'DOWNLOADS',
-              encoding: 'utf8'
-            });
-          } catch (_) {}
           await Share.share({
             title: 'Expense Tracker Data',
             files: [cacheResult.uri]
           });
         } catch (e) {
-          alert('Export failed: ' + e.message);
+          if (savedDir) {
+            alert('Saved to device');
+          } else {
+            alert('Export failed: ' + e.message);
+          }
         }
       } else {
         const blob = new Blob([jsonStr], { type: 'application/json' });
