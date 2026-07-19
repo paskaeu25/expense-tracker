@@ -1188,7 +1188,7 @@
             }
           }
         }
-      } else {
+        } else {
           const blob = new Blob([jsonStr], { type: 'application/json' });
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
@@ -1196,13 +1196,6 @@
           setTimeout(() => URL.revokeObjectURL(url), 5000);
           alert('Download started via browser');
         }
-      } else {
-        const blob = new Blob([jsonStr], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = 'expense-tracker-data.json'; a.click();
-        URL.revokeObjectURL(url);
-      }
     });
     document.getElementById('btn-cancel-edit').addEventListener('click', cancelEdit);
     document.getElementById('btn-split').addEventListener('click', function() {
