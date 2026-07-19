@@ -1170,45 +1170,25 @@
       const Capacitor = window.Capacitor;
       if (Capacitor?.isNativePlatform?.()) {
         const { Filesystem } = Capacitor.Plugins;
-        let savedDir = null;
         if (Filesystem) {
-          const dirs = ['DOCUMENTS', 'EXTERNAL_STORAGE', 'CACHE'];
-          for (const dir of dirs) {
+          const ts = Date.now();
+          const labels = { DOCUMENTS: 'Documents', EXTERNAL: 'App folder', CACHE: 'Cache' };
+          for (const dir of ['DOCUMENTS', 'EXTERNAL', 'CACHE']) {
             try {
               await Filesystem.writeFile({
-                path: 'expense-tracker-data.json',
+                path: 'expense-tracker-data-' + ts + '.json',
                 data: jsonStr,
                 directory: dir,
                 encoding: 'utf8'
               });
-              savedDir = dir;
+              alert('Saved to ' + (labels[dir] || dir));
               break;
-            } catch (_) {}
+            } catch (e) {
+              if (dir === 'CACHE') alert('Could not save: ' + e.message);
+            }
           }
         }
-        if (savedDir) {
-          const { Share } = Capacitor.Plugins;
-          if (Share) {
-            try {
-              await Filesystem.writeFile({
-                path: 'expense-tracker-data.json',
-                data: jsonStr,
-                directory: 'CACHE',
-                encoding: 'utf8'
-              });
-              const cacheResult = await Filesystem.getUri({
-                path: 'expense-tracker-data.json',
-                directory: 'CACHE'
-              });
-              await Share.share({
-                title: 'Expense Tracker Data',
-                files: [cacheResult.uri]
-              });
-            } catch (_) {}
-          }
-          const label = { DOCUMENTS: 'Documents', EXTERNAL_STORAGE: 'External Storage', CACHE: 'Cache' }[savedDir] || 'device';
-          alert('Saved to ' + label);
-        } else {
+      } else {
           const blob = new Blob([jsonStr], { type: 'application/json' });
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');

@@ -23,6 +23,7 @@ Scratch/experimental repo. The real project is the **expense tracker** in `app/`
 
 ## Workflow
 
+- **IMPORTANT**: Before editing any file, always run `git pull` from the `app/` directory first to ensure you're working with the latest code.
 - Always commit and push from `app/` directory.
 - No build step — just edit `index.html`, commit, push.
 - Vercel auto-deploys every push to `main`.
