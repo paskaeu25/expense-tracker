@@ -26,6 +26,8 @@ Scratch/experimental repo. The real project is the **expense tracker** in `app/`
 - No build step — just edit `index.html`, commit, push.
 - Vercel auto-deploys every push to `main`.
 - **IMPORTANT**: After every change, immediately commit and push to `main`. The user tests on the live Vercel deployment, not locally.
+- **Vercel Root Directory**: Must be set to `app/` in Vercel Dashboard → Settings → General → Root Directory. If Vercel isn't deploying, check this first.
+- **Android APK**: GitHub Actions auto-builds an APK on every push to `main`. Download from GitHub → Actions → latest run → Artifacts → `expense-tracker-apk`. No local build needed.
 
 ## Android App (Capacitor)
 
