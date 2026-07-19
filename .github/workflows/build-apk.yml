@@ -25,7 +25,7 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v4
         with:
-          packages: 'platforms;android-35 build-tools;35.0.0'
+          packages: 'platforms;android-35 cmdline-tools;latest build-tools;35.0.0'
 
       - name: Install Node.js
         uses: actions/setup-node@v7
@@ -46,7 +46,9 @@ jobs:
         run: npx cap add android
 
       - name: Build APK
-        run: ./gradlew assembleDebug --stacktrace
+        run: |
+          ./gradlew assembleDebug --stacktrace --no-daemon --console=plain 2>&1 | tee gradle-output.log
+          exit ${PIPESTATUS[0]}
         working-directory: app/android
 
       - name: Upload APK
@@ -54,3 +56,10 @@ jobs:
         with:
           name: expense-tracker-apk
           path: app/android/app/build/outputs/apk/debug/*.apk
+
+      - name: Upload Gradle logs
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: gradle-logs
+          path: app/android/gradle-output.log
