@@ -17,6 +17,7 @@ Scratch/experimental repo. The real project is the **expense tracker** in `app/`
 - Search & filter: keyword search + year/month dropdowns to browse past months.
 - ½ split toggle: halves the entered amount (reverts on second tap).
 - CSV/JSON export + JSON import for cross-device sync.
+- Data persistence across APK reinstalls: 3-layer approach — (1) Android Auto Backup (Google Drive), (2) Capacitor Preferences (SharedPreferences), (3) Filesystem `EXTERNAL_STORAGE` fallback (API 23-29). The `save()` call writes to all three on every change.
 - The `inputs/` folder has raw CSV, conversion script, and seed JSON (gitignored).
 - `june-expenses.json` is never committed (gitignored, removed from history).
 
@@ -44,3 +45,10 @@ Scratch/experimental repo. The real project is the **expense tracker** in `app/`
 - `android/` is also gitignored — each dev runs `npx cap add android` once.
 - `capacitor.config.json` and `package.json` are in `.gitignore` (not committed) because they are local dev tooling, not part of the deployed web app.
 - Vercel ignores `android/`, `dist/`, `node_modules/` via `.vercelignore`.
+
+## Build numbering
+
+- **GitHub Actions** workflow uses a custom `run-name` so each build appears as `#<run_number> - <commit message>` (e.g. `#21 - Add dark mode`).
+- **Prefix every response** with the current build number, e.g. `**#21** Here's the fix...`. Always check https://github.com/paskaeu25/expense-tracker/actions for the latest build number before starting a session.
+- The CI increments `versionCode` using `${{ github.run_number }}` so new APKs install over old ones without uninstalling.
+- The debug keystore is cached (`~/.android/debug.keystore`) so all builds share the same signing key. If the cache is ever evicted, the user must uninstall + reinstall once, then caching resumes.
